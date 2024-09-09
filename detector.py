@@ -23,6 +23,7 @@ from utils.reduction import (
 
 import feature_extractor as fe
 import joblib
+import torch
 
 class Detector(AbstractDetector):
     def __init__(self, metaparameter_filepath, learned_parameters_dirpath):
@@ -140,19 +141,23 @@ class Detector(AbstractDetector):
         """
 
         logging.info("Loading model for prediction")
-        _, model_repr, _ = load_model(model_filepath)
+        model = torch.load(model_filepath, map_location=torch.device('cuda'))
+        layer_num = 1
 
         logging.info("Extracting model features")
-        X = fe.get_model_features(model_repr, normalize=True, fe_imp=799)  #799 or 1128
+        X, model_arch = fe.get_model_features(model, normalize=False, layer_num=layer_num)
+        # if os.path.exists(os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, 'fe_imp.npy')):
+        #     idx = np.load(os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, 'fe_imp.npy'))
+        #     X = X[:, idx]
         logging.info(f'X shape - {X.shape}')
         
         logging.info('Loading classifier')
         logging.info('Using original classifier')
-        clf = joblib.load(join(fe.ORIGINAL_LEARNED_PARAM_DIR, '799fe.joblib'))
+        clf = joblib.load(join(fe.ORIGINAL_LEARNED_PARAM_DIR, f'clf_layer{layer_num}_{model_arch}.joblib'))
     
         logging.info('Detecting trojan probability')
         try:
-            trojan_probability = clf.predict_proba(X)[0, -1]
+            trojan_probability = clf.predict_proba(X)[0, 0]
         except:
             logging.warning('Not able to detect such model class')
             with open(result_filepath, 'w') as fh:

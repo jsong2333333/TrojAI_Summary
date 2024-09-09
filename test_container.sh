@@ -1,11 +1,11 @@
-model_filepath='/scratch/data/TrojAI/cyber-apk-nov2023-train-rev2/models/id-00000000/model.pt' #'/scratch/jialin/cyber-apk-nov2023/model/id-00000001/model.pt'
-result_filepath='/scratch/jialin/cyber-apk-nov2023/output.txt'
+model_filepath='/scratch/data/TrojAI/cyber-network-c2-feb2024/models/id-00000005/model.pt'
+result_filepath='/scratch/jialin/cyber-network-c2-feb2024/output.txt'
 dummy_filepath='/dummy'
-container_folder='/scratch/jialin/round-17/'
+container_folder='/scratch/jialin/cyber-network-c2-feb2024/'
 
 cd $container_folder
 
-python ./entrypoint.py infer \
+python entrypoint.py infer \
 --model_filepath $model_filepath \
 --result_filepath $result_filepath \
 --scratch_dirpath $dummy_filepath \
