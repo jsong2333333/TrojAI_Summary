@@ -4,77 +4,61 @@
 
 # You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
 
-import re
-from collections import OrderedDict
+
 from os.path import join
 
 import torch
-from tqdm import tqdm
 import json
 import os
-from utils.trafficnn import TrafficNN
+import logging
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 
-def create_layer_map(model_repr_dict):
-    model_layer_map = {}
-    for (model_class, models) in model_repr_dict.items():
-        layers = models[0]
-        layer_names = list(layers.keys())
-        base_layer_names = list(
-            dict.fromkeys(
-                [
-                    re.sub(
-                        "\\.(weight|bias|running_(mean|var)|num_batches_tracked)",
-                        "",
-                        item,
-                    )
-                    for item in layer_names
-                ]
-            )
-        )
-        layer_map = OrderedDict(
-            {
-                base_layer_name: [
-                    layer_name
-                    for layer_name in layer_names
-                    if re.match(f"{base_layer_name}.+", layer_name) is not None
-                ]
-                for base_layer_name in base_layer_names
-            }
-        )
-        model_layer_map[model_class] = layer_map
-
-    return model_layer_map
-
-
-def load_model(model_filepath: str) -> (dict, str):
+def load_model(model_filepath: str, torch_dtype:torch.dtype=torch.float16):
     """Load a model given a specific model_path.
 
     Args:
-        model_filepath: str - Path to model.pt file
+        model_filepath: str - Path to where the model is stored
 
     Returns:
         model, dict, str - Torch model + dictionary representation of the model + model class name
     """
 
-    conf_filepath = os.path.join(os.path.dirname(model_filepath), 'reduced-config.json')
-    with open(conf_filepath, 'r') as f:
-        full_conf = json.load(f)
+    conf_filepath = os.path.join(model_filepath, 'reduced-config.json')
+    if os.path.exists(conf_filepath):
+        logging.info("Loading config file from: {}".format(conf_filepath))
+        with open(conf_filepath, 'r') as fh:
+            round_config = json.load(fh)
 
-    device = 'cpu'
-    if torch.cuda.is_available():
-        device = 'cuda'
+        logging.info("Loading model from filepath: {}".format(model_filepath))
+        # https://huggingface.co/docs/transformers/installation#offline-mode
+        if round_config['use_lora']:
+            base_model_filepath = os.path.join(model_filepath, 'base-model')
+            logging.info("loading the base model (before LORA) from {}".format(base_model_filepath))
+            model = AutoModelForCausalLM.from_pretrained(base_model_filepath, trust_remote_code=True, torch_dtype=torch_dtype, local_files_only=True)
+            # model = AutoModelForCausalLM.from_pretrained(round_config['model_architecture'], trust_remote_code=True, attn_implementation="flash_attention_2", torch_dtype=torch_dtype)
 
-    model = TrafficNN(full_conf['img_resolution']**2, full_conf)
-    model.model.load_state_dict(torch.load(model_filepath, map_location=device))
-    model.model.to(model.device).eval()
+            fine_tuned_model_filepath = os.path.join(model_filepath, 'fine-tuned-model')
+            logging.info("loading the LORA adapter onto the base model from {}".format(fine_tuned_model_filepath))
+            model.load_adapter(fine_tuned_model_filepath)
+        else:
+            fine_tuned_model_filepath = os.path.join(model_filepath, 'fine-tuned-model')
+            logging.info("Loading full fine tune checkpoint into cpu from {}".format(fine_tuned_model_filepath))
+            model = AutoModelForCausalLM.from_pretrained(fine_tuned_model_filepath, trust_remote_code=True, torch_dtype=torch_dtype, local_files_only=True)
+            # model = AutoModelForCausalLM.from_pretrained(fine_tuned_model_filepath, trust_remote_code=True, attn_implementation="flash_attention_2", torch_dtype=torch_dtype)
+    else:
+        logging.info("Loading config file from remote")
+        from transformers import LlamaConfig
+        configuration = LlamaConfig()
+        model = AutoModelForCausalLM.from_config(configuration, trust_remote_code=True, torch_dtype=torch_dtype)
 
-    model_class = model.model.__class__.__name__
-    model_repr = OrderedDict(
-        {layer: tensor.cpu().numpy() for (layer, tensor) in model.model.state_dict().items()}
-    )
 
-    return model, model_repr, model_class
+    model.eval()
+
+    tokenizer_filepath = os.path.join(model_filepath, 'tokenizer')
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_filepath)
+
+    return model, tokenizer
 
 
 def load_ground_truth(model_dirpath: str):
@@ -92,23 +76,3 @@ def load_ground_truth(model_dirpath: str):
 
     return int(model_ground_truth)
 
-
-def load_models_dirpath(models_dirpath):
-    model_repr_dict = {}
-    model_ground_truth_dict = {}
-
-    for model_path in tqdm(models_dirpath):
-        model, model_repr, model_class = load_model(
-            join(model_path, "model.pt")
-        )
-        model_ground_truth = load_ground_truth(model_path)
-
-        # Build the list of models
-        if model_class not in model_repr_dict.keys():
-            model_repr_dict[model_class] = []
-            model_ground_truth_dict[model_class] = []
-
-        model_repr_dict[model_class].append(model_repr)
-        model_ground_truth_dict[model_class].append(model_ground_truth)
-
-    return model_repr_dict, model_ground_truth_dict

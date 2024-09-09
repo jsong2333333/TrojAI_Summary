@@ -70,7 +70,7 @@ if __name__ == "__main__":
     inf_parser.add_argument(
         "--model_filepath",
         type=str,
-        help="File path to the pytorch model file to be evaluated.",
+        help="File path to the folder containing the HuggingFace safetensors version of the model to be evaluated.",
         required=True
     )
     inf_parser.add_argument(
@@ -94,14 +94,14 @@ if __name__ == "__main__":
         type=str,
         help="File path to the folder of examples which might be useful for determining "
         "whether a model is poisoned.",
-        required=True
+        default=None
     )
     inf_parser.add_argument(
         "--round_training_dataset_dirpath",
         type=str,
         help="File path to the directory containing id-xxxxxxxx models of the current "
         "rounds training dataset.",
-        required=True
+        default=None
     )
 
     inf_parser.add_argument(

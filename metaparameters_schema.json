@@ -1,63 +1,64 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Trojan Detection Container from ICSI",
-  "technique": "Gradient Boosting Classifier",
-  "technique_description": "Extracts normalized model weights",
-  "technique_changes": "weight stat extraction based on layer, extract features by feature importance",
-  "technique_type": ["Weight Analysis"],
-  "commit_id": "",
-  "repo_name": "https://github.com/jsong2333333/round-18",
-  "required": [],
-  "additionalProperties": false,
-  "type": "object",
-  "properties": {
-    "train_gbm_param_learning_rate": {
-        "description": "How fast the classifier is learning.",
-        "type": "number",
-        "minimum": 0.001,
-        "maximum": 1,
-        "suggested_minimum": 0.005,
-        "suggested_maximum": 0.05
-      },
-    "train_gbm_param_n_estimators": {
-        "description": "The number of boosting stages.",
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 2000,
-        "suggested_minimum": 200,
-        "suggested_maximum": 1200
-      },
-    "train_gbm_param_max_depth": {
-        "description": "The maximum depth of the individual regression estimators.",
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 10,
-        "suggested_minimum": 1,
-        "suggested_maximum": 5
-      },
-    "train_gbm_param_min_samples_split": {
-        "description": "The minimum number of samples required to split an internal node.",
-        "type": "integer",
-        "minimum": 2,
-        "maximum": 500,
-        "suggested_minimum": 10,
-        "suggested_maximum": 160
-      },
-    "train_gbm_param_min_samples_leaf": {
-        "description": "The minimum number of samples required to be at a leaf node.",
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 500,
-        "suggested_minimum": 2,
-        "suggested_maximum": 80
-      },
-    "train_gbm_param_max_features": {
-        "description": "The number of features to consider when looking for the best split.",
-        "type": "integer",
-        "minimum": 1,
-        "maximum": 900,
-        "suggested_minimum": 20,
-        "suggested_maximum": 700
-      }
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Trojan Detection Container from ICSI",
+	"technique": "Gradient Boosting Classifier",
+	"technique_description": "Extracts LLM model weights from first attention layer",
+	"technique_changes": "weight stat extraction based on layer, for baseline submission",
+	"technique_type": ["Weight Analysis"],
+	"commit_id": "82da3aa558a9576aaf941b8d59ea2e3e070b2b12",
+	"repo_name": "https://github.com/jsong2333333/round-19",
+	"required": [],
+	"additionalProperties": false,
+	"type": "object",
+	"properties": {
+	  "train_gbm_param_learning_rate": {
+		  "description": "How fast the classifier is learning.",
+		  "type": "number",
+		  "minimum": 0.001,
+		  "maximum": 1,
+		  "suggested_minimum": 0.005,
+		  "suggested_maximum": 0.05
+		},
+	  "train_gbm_param_n_estimators": {
+		  "description": "The number of boosting stages.",
+		  "type": "integer",
+		  "minimum": 1,
+		  "maximum": 2000,
+		  "suggested_minimum": 200,
+		  "suggested_maximum": 1200
+		},
+	  "train_gbm_param_max_depth": {
+		  "description": "The maximum depth of the individual regression estimators.",
+		  "type": "integer",
+		  "minimum": 1,
+		  "maximum": 10,
+		  "suggested_minimum": 1,
+		  "suggested_maximum": 5
+		},
+	  "train_gbm_param_min_samples_split": {
+		  "description": "The minimum number of samples required to split an internal node.",
+		  "type": "integer",
+		  "minimum": 2,
+		  "maximum": 500,
+		  "suggested_minimum": 10,
+		  "suggested_maximum": 160
+		},
+	  "train_gbm_param_min_samples_leaf": {
+		  "description": "The minimum number of samples required to be at a leaf node.",
+		  "type": "integer",
+		  "minimum": 1,
+		  "maximum": 500,
+		  "suggested_minimum": 2,
+		  "suggested_maximum": 80
+		},
+	  "train_gbm_param_max_features": {
+		  "description": "The number of features to consider when looking for the best split.",
+		  "type": "integer",
+		  "minimum": 1,
+		  "maximum": 900,
+		  "suggested_minimum": 20,
+		  "suggested_maximum": 700
+		}
+	}
   }
-}
+  
