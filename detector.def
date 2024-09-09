@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.9-bullseye
+From: python:3.8
 
 %files
     ./detector.py /
@@ -11,13 +11,11 @@ From: python:3.9-bullseye
     ./feature_extractor.py /
 
 %post
+    apt update
+
     pip install --upgrade pip
-    pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-    pip install gym gymnasium minigrid jsonschema jsonpickle scikit-learn opencv-python pandas
-    chmod 755 /*.py
-    chmod -R 755 /utils
-    chmod 755 /*.json
-    chmod -R 755 /learned_parameters
+    pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 --extra-index-url https://download.pytorch.org/whl/cu113
+    pip install tqdm jsonschema jsonargparse scikit-learn==1.3.2 joblib==1.3.2
 
 %runscript
     exec python3 /entrypoint.py "$@"

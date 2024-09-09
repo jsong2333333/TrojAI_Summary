@@ -1,1 +1,0 @@
-{"FCModel": ["state_emb.1.weight", "state_emb.3.weight", "state_emb.3.bias", "actor.0.weight", "critic.0.weight", "critic.4.bias"], "CNNModel": ["state_emb.0.bias", "state_emb.2.bias", "state_emb.4.bias", "actor.0.weight", "critic.0.weight"]}

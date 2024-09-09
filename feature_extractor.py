@@ -1,77 +1,41 @@
 import numpy as np
-import torch
-from itertools import product
+import os
 
 
 ORIGINAL_LEARNED_PARAM_DIR = './learned_parameters'
-MODEL_ARCH = [''] #['SimplifiedRLStarter', 'BasicFCModel']
+FE_IMP_MEAN = np.load(os.path.join(ORIGINAL_LEARNED_PARAM_DIR, 'fe_imps_mean.npy'))
 
+def get_model_features(model_repr: dict, infer=True, normalize=False, layers='all', fe_imp=None):
+    # reversed_order_key = [k for k in model_repr.keys() if 'weight' in k][::-1]
+    # final_layer = reversed_order_key[0].split('.')[0]
 
-def _get_weight_features(model_repr, dim=(), normalize=False):
-    weight_features = []
-    weight_lens = []
-    for backbone_params in model_repr.values():
-        # pshape = len(param.shape)
-        # if axis is None:
-            # axis = tuple(range(-1, -1*(pshape), -1))
-        # weight_features += np.max(param, axis= axis, keepdims=True).flatten().tolist()
-        # weight_features += np.mean(param, axis= axis, keepdims=True).flatten().tolist()
-        # sub = np.mean(param, axis= axis, keepdims=True) - np.median(param, axis= axis, keepdims=True)
-        # weight_features += sub.flatten().tolist()
-        # weight_features += np.median(param, axis= axis, keepdims=True).flatten().tolist()
-        # weight_features += np.sum(np.abs(param), axis= axis, keepdims=True).flatten().tolist()
-        if normalize:
-            norm = torch.linalg.norm(backbone_params.reshape(backbone_params.shape[0], -1), ord=2)
-            backbone_params  = backbone_params/norm
-        weight_features += torch.amax(backbone_params, dim=dim).flatten().detach().cpu().tolist()
-        weight_features += torch.mean(backbone_params, dim=dim).flatten().detach().cpu().tolist()
-        end_dim = -1*(len(backbone_params.shape) - len(dim))
-        sub = torch.mean(backbone_params, dim=dim) - torch.median(torch.flatten(backbone_params, start_dim=0, end_dim=end_dim), dim=end_dim)[0]
-        weight_features += sub.flatten().detach().cpu().tolist()
-        weight_features += torch.median(torch.flatten(backbone_params, start_dim=0, end_dim=end_dim), dim=end_dim)[0].flatten().detach().cpu().tolist()
-        weight_features += torch.sum(backbone_params, dim=dim).flatten().detach().cpu().tolist()
-        weight_lens.append(len(weight_features))
-    return weight_features, weight_lens
-
-def _get_eigen_features(model_repr, normalize=False, ssv_portion = 0.5):
-    min_shape, params = 1, []
-    for param in model_repr.values():
-        if len(param.shape) > min_shape:
-            if normalize:
-                norm = torch.linalg.norm(param.reshape(param.shape[0], -1), ord=2)
-                param  = param/norm
-            reshaped_param = param.reshape(param.shape[0], -1)
-            _, singular_values, _ = torch.linalg.svd(reshaped_param, False)
-            ssv = torch.square(singular_values).flatten()
-            params.extend(ssv.tolist()[:int(len(ssv)*ssv_portion)])
-    return params
-
-
-def keys_for_extraction(model):
-    layer_names = ['actor', 'critic', 'state_emb']
-    keys_to_dict = {} #{layer_name:1e8 for layer_name in layer_names}
+    # features = []
+    # if layers == 'all':
+    #     weight_keys = [f'fc{n}.weight' for n in range(1, 5)]
+    # else:
+    #     weight_keys = ['fc1.weight', f'{final_layer}.weight']
+    # for k in weight_keys:
+    #     mat = model_repr[k]
+    #     norm = 1
+    #     if normalize:
+    #         norm = np.linalg.norm(mat)
+    #     _, s, _ = np.linalg.svd(mat.reshape(mat.shape[0], -1)/norm)
+    #     features.extend(s.flatten().tolist()[:100])
     
-    for k in model.keys():
-        splitted_k = k.split('.')
-        layer_name = splitted_k[0]
-        if layer_name in layer_names:
-            keys_to_dict.setdefault(layer_name, 1e8)
-            n_layer = keys_to_dict[layer_name]
-            ini_layer = min(n_layer, int(splitted_k[1]))
-            keys_to_dict[layer_name] = ini_layer
-            
-    keys_for_extract = sorted([f'{k}.{v}.{wb}' for (k, v),  wb in product(keys_to_dict.items(), ['weight', 'bias'])])
-    
-    return {k:v for k, v in model.items() if k in keys_for_extract}
-
-
-def get_model_features(model_repr, infer=True):
-    
-    # model_repr = keys_for_extraction(model_repr)
-     
-    features = []
-    features += _get_weight_features(model_repr, normalize=True)[0]
-    features += _get_eigen_features(model_repr, normalize=True, ssv_portion=0.4)
+    num_layer = len(model_repr.items())//2
+    for nl in range(num_layer, 0, -1):
+        weight_layer_name = f'fc{nl}.weight'
+        if nl == num_layer:
+            mat = model_repr[weight_layer_name]
+        else:
+            mat = mat @ model_repr[weight_layer_name]
+    norm = np.linalg.norm(mat, ord=2) if normalize else 1.
+    mat = mat/norm
+    features = mat.flatten()
+    if fe_imp == 1128:
+        features = features[FE_IMP_MEAN>=1e-4]
+    elif fe_imp == 799:
+        features = features[FE_IMP_MEAN>=2e-4]
 
     if infer:
         return np.asarray([features])
