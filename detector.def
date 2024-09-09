@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: python:3.8-bullseye
+From: pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime
 
 %files
     ./detector.py /
@@ -12,11 +12,7 @@ From: python:3.8-bullseye
 
 %post
     pip install --upgrade pip
-    pip install torch --index-url https://download.pytorch.org/whl/cpu
-    pip install trojai_rl
-    pip install gym_minigrid==1.0.2
-    pip install jsonschema jsonargparse jsonpickle scikit-learn==1.1.2
-    pip install pandas==1.2.1
+    pip install torchvision jsonpickle jsonschema transformers evaluate datasets scikit-learn pandas
     chmod 755 /*.py
     chmod -R 755 /utils
 

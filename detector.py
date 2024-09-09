@@ -1,16 +1,12 @@
-# NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.
-
-# NIST-developed software is expressly provided "AS IS." NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
-
-# You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
-
-
 import logging
 import os
 import json
 import jsonpickle
 import pickle
 import numpy as np
+import datasets
+import torch
+import transformers
 import pandas as pd
 
 from sklearn.ensemble import GradientBoostingClassifier
@@ -19,14 +15,12 @@ from sklearn.model_selection import GridSearchCV
 
 from utils.abstract import AbstractDetector
 from utils.models import load_model, load_models_dirpath
+import utils.qa_utils
 
 import torch
-import torch_ac
-import gym
-from gym_minigrid.wrappers import ImgObsWrapper
-
 import joblib
 import feature_extractor as fe
+from collections import OrderedDict
 
 
 TUNE_PARAM_GRID = {'gbm__learning_rate': np.arange(.005, .0251, .005), 
@@ -173,75 +167,14 @@ class Detector(AbstractDetector):
         logging.info("Manual Configuration finished.")
 
 
-    def inference_on_example_data(self, model, examples_dirpath):
-        """Method to demonstrate how to inference on a round's example data.
-
-        Args:
-            model: the pytorch model
-            examples_dirpath: the directory path for the round example data
-        """
-
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        logging.info("Using compute device: {}".format(device))
-
-        model.to(device)
-        model.eval()
-
-        preprocess = torch_ac.format.default_preprocess_obss
-
-        # Utilize open source minigrid environment model was trained on
-        env_string_filepath = os.path.join(examples_dirpath, 'env-string.txt')
-        with open(env_string_filepath) as env_string_file:
-            env_string = env_string_file.readline().strip()
-        logging.info('Evaluating on {}'.format(env_string))
-
-        # Number of episodes to run
-        episodes = 100
-
-        env_perf = {}
-
-        # Run episodes through an environment to collect what may be relevant information to trojan detection
-        # Construct environment and put it inside a observation wrapper
-        env = ImgObsWrapper(gym.make(env_string))
-        obs = env.reset()
-        obs = preprocess([obs], device=device)
-
-        final_rewards = []
-        with torch.no_grad():
-            # Episode loop
-            for _ in range(episodes):
-                done = False
-                # Use env observation to get action distribution
-                dist, value = model(obs)
-                # Per episode loop
-                while not done:
-                    # Sample from distribution to determine which action to take
-                    action = dist.sample()
-                    action = action.cpu().detach().numpy()
-                    # Use action to step environment and get new observation
-                    obs, reward, done, info = env.step(action)
-                    # Preprocessing function to prepare observation from env to be given to the model
-                    obs = preprocess([obs], device=device)
-                    # Use env observation to get action distribution
-                    dist, value = model(obs)
-
-                # Collect episode performance data (just the last reward of the episode)
-                final_rewards.append(reward)
-                # Reset environment after episode and get initial observation
-                obs = env.reset()
-                obs = preprocess([obs], device=device)
-
-        # Save final rewards
-        env_perf['final_rewards'] = final_rewards
-
-
     def infer(
             self,
-            model_filepath,
-            result_filepath,
-            scratch_dirpath,
-            examples_dirpath,
-            round_training_dataset_dirpath,
+            model_filepath, 
+            result_filepath, 
+            scratch_dirpath, 
+            examples_dirpath, 
+            round_training_dataset_dirpath, 
+            tokenizer_filepath
     ):
         """Method to predict whether a model is poisoned (1) or clean (0).
 
@@ -257,18 +190,26 @@ class Detector(AbstractDetector):
 
         logging.info("Loading model for prediction")
         # load the model
-        model, model_repr, model_class = load_model(model_filepath)
+        model = torch.load(model_filepath)
+        model_repr = OrderedDict({layer: tensor.to(device) for (layer, tensor) in model.state_dict().items() if layer.endswith('weight')})
+        model_class = fe.LAYERS_TO_MODEL_ARCH[len(model_repr)]
+
+        # logging.info('Loading feature selection layers')
+        # arch_to_layers_pth = os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, 'good_weight_keys.json')
+        # chosen_layers = list(model_repr.keys())
+        # if os.path.exists(arch_to_layers_pth):
+        #     chosen_layers = json.load(open(arch_to_layers_pth, 'r'))[model_class]
+        # model_repr = OrderedDict({layer: tensor.to(fe.DEVICE) for (layer, tensor) in model_repr.items() if layer in chosen_layers})
+        # if model_class == fe.MODEL_ARCH[1]:
+            # model_repr = OrderedDict({layer: tensor.to(fe.DEVICE) for (layer, tensor) in model.state_dict().items() if 'qa_outputs' in layer})
+        # else:
+            # model_repr = OrderedDict({layer: tensor.to(fe.DEVICE) for (layer, tensor) in model.state_dict().items() if 'position_ids' not in layer and 'embedding' in layer})
 
         logging.info("Getting model features")
-        X = fe.get_model_features(model, model_class, model_repr)
+        X = fe.get_model_features(model_repr)
         logging.info(f'X shape - {X.shape}')
-
-        related_ind_filepath = os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, 'fe_ind2.json')
-        if os.path.exists(related_ind_filepath):
-            extracted_inds = json.load(open(related_ind_filepath, 'r'))[model_class]
-            X = X[:, extracted_inds]
-            logging.info(f'reduced fe X shape - {X.shape}')
-        # CHANGE CLASSIFIER!!!
+        
+        fe_imp = json.load(open(os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, 'fe_imp.json'), 'r'))[model_class]
 
         logging.info('Loading classifier')
         potential_reconfig_model_filepath = os.path.join(self.learned_parameters_dirpath, f'reconfig_{model_class}_clf.joblib')
@@ -276,10 +217,11 @@ class Detector(AbstractDetector):
             clf = joblib.load(potential_reconfig_model_filepath)
         else:
             logging.info('Using original classifier')
-            clf = joblib.load(os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, f'{model_class}_clf3.joblib'))
+            clf = joblib.load(os.path.join(fe.ORIGINAL_LEARNED_PARAM_DIR, f'{model_class}_fe_imp_dim0.joblib'))
     
         logging.info('Detecting trojan probability')
         try:
+            X = X[:, np.asarray(fe_imp) != 0]
             trojan_probability = clf.predict_proba(X)[0, -1]
         except:
             logging.warning('Not able to detect such model class')

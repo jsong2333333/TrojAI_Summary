@@ -1,0 +1,238 @@
+{
+    "train_learned_gbm_param-learning_rate": {
+        "description": "How fast the classifier is learning.",
+        "maximum": 1,
+        "minimum": 0.001,
+        "suggested_maximum": 0.05,
+        "suggested_minimum": 0.005,
+        "type": "number"
+    },
+    "train_learned_gbm_param-max_depth": {
+        "description": "The maximum depth of the individual regression estimators.",
+        "maximum": 10,
+        "minimum": 1,
+        "suggested_maximum": 5,
+        "suggested_minimum": 1,
+        "type": "integer"
+    },
+    "train_learned_gbm_param-max_features": {
+        "description": "The number of features to consider when looking for the best split.",
+        "maximum": 900,
+        "minimum": 1,
+        "suggested_maximum": 700,
+        "suggested_minimum": 20,
+        "type": [
+            "integer",
+            "string"
+        ]
+    },
+    "train_learned_gbm_param-min_samples_leaf": {
+        "description": "The minimum number of samples required to be at a leaf node.",
+        "maximum": 500,
+        "minimum": 1,
+        "suggested_maximum": 80,
+        "suggested_minimum": 2,
+        "type": "integer"
+    },
+    "train_learned_gbm_param-min_samples_split": {
+        "description": "The minimum number of samples required to split an internal node.",
+        "maximum": 500,
+        "minimum": 2,
+        "suggested_maximum": 160,
+        "suggested_minimum": 10,
+        "type": "integer"
+    },
+    "train_learned_gbm_param-n_estimators": {
+        "description": "The number of boosting stages.",
+        "maximum": 2000,
+        "minimum": 1,
+        "suggested_maximum": 1200,
+        "suggested_minimum": 200,
+        "type": "integer"
+    },
+    "train_learned_gbm_param-subsample": {
+        "description": "The fraction of samples to be used for fitting the individual base learners.",
+        "maximum": 1,
+        "minimum": 0.01,
+        "suggested_maximum": 0.98,
+        "suggested_minimum": 0.05,
+        "type": "number"
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-learning_rate": {
+        "description": "How fast the classifier is learning.",
+        "maximum": 1,
+        "minimum": 0.001,
+        "suggested_maximum": 0.05,
+        "suggested_minimum": 0.005,
+        "type": "number"
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-max_depth": {
+        "description": "The maximum depth of the individual regression estimators.",
+        "maximum": 10,
+        "minimum": 1,
+        "suggested_maximum": 5,
+        "suggested_minimum": 1,
+        "type": "integer"
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-max_features": {
+        "description": "The number of features to consider when looking for the best split.",
+        "maximum": 900,
+        "minimum": 1,
+        "suggested_maximum": 700,
+        "suggested_minimum": 20,
+        "type": [
+            "integer",
+            "string"
+        ]
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-min_samples_leaf": {
+        "description": "The minimum number of samples required to be at a leaf node.",
+        "maximum": 500,
+        "minimum": 1,
+        "suggested_maximum": 80,
+        "suggested_minimum": 2,
+        "type": "integer"
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-min_samples_split": {
+        "description": "The minimum number of samples required to split an internal node.",
+        "maximum": 500,
+        "minimum": 2,
+        "suggested_maximum": 160,
+        "suggested_minimum": 10,
+        "type": "integer"
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-n_estimators": {
+        "description": "The number of boosting stages.",
+        "maximum": 2000,
+        "minimum": 1,
+        "suggested_maximum": 1200,
+        "suggested_minimum": 200,
+        "type": "integer"
+    },
+    "train_mobilebert-uncased-squad-v2_gbm_param-subsample": {
+        "description": "The fraction of samples to be used for fitting the individual base learners.",
+        "maximum": 1,
+        "minimum": 0.01,
+        "suggested_maximum": 0.98,
+        "suggested_minimum": 0.05,
+        "type": "number"
+    },
+    "train_roberta-base-squad2_gbm_param-learning_rate": {
+        "description": "How fast the classifier is learning.",
+        "maximum": 1,
+        "minimum": 0.001,
+        "suggested_maximum": 0.05,
+        "suggested_minimum": 0.005,
+        "type": "number"
+    },
+    "train_roberta-base-squad2_gbm_param-max_depth": {
+        "description": "The maximum depth of the individual regression estimators.",
+        "maximum": 10,
+        "minimum": 1,
+        "suggested_maximum": 5,
+        "suggested_minimum": 1,
+        "type": "integer"
+    },
+    "train_roberta-base-squad2_gbm_param-max_features": {
+        "description": "The number of features to consider when looking for the best split.",
+        "maximum": 900,
+        "minimum": 1,
+        "suggested_maximum": 700,
+        "suggested_minimum": 20,
+        "type": [
+            "integer",
+            "string"
+        ]
+    },
+    "train_roberta-base-squad2_gbm_param-min_samples_leaf": {
+        "description": "The minimum number of samples required to be at a leaf node.",
+        "maximum": 500,
+        "minimum": 1,
+        "suggested_maximum": 80,
+        "suggested_minimum": 2,
+        "type": "integer"
+    },
+    "train_roberta-base-squad2_gbm_param-min_samples_split": {
+        "description": "The minimum number of samples required to split an internal node.",
+        "maximum": 500,
+        "minimum": 2,
+        "suggested_maximum": 160,
+        "suggested_minimum": 10,
+        "type": "integer"
+    },
+    "train_roberta-base-squad2_gbm_param-n_estimators": {
+        "description": "The number of boosting stages.",
+        "maximum": 2000,
+        "minimum": 1,
+        "suggested_maximum": 1200,
+        "suggested_minimum": 200,
+        "type": "integer"
+    },
+    "train_roberta-base-squad2_gbm_param-subsample": {
+        "description": "The fraction of samples to be used for fitting the individual base learners.",
+        "maximum": 1,
+        "minimum": 0.01,
+        "suggested_maximum": 0.98,
+        "suggested_minimum": 0.05,
+        "type": "number"
+    },
+    "train_tinyroberta-squad2_gbm_param-learning_rate": {
+        "description": "How fast the classifier is learning.",
+        "maximum": 1,
+        "minimum": 0.001,
+        "suggested_maximum": 0.05,
+        "suggested_minimum": 0.005,
+        "type": "number"
+    },
+    "train_tinyroberta-squad2_gbm_param-max_depth": {
+        "description": "The maximum depth of the individual regression estimators.",
+        "maximum": 10,
+        "minimum": 1,
+        "suggested_maximum": 5,
+        "suggested_minimum": 1,
+        "type": "integer"
+    },
+    "train_tinyroberta-squad2_gbm_param-max_features": {
+        "description": "The number of features to consider when looking for the best split.",
+        "maximum": 900,
+        "minimum": 1,
+        "suggested_maximum": 700,
+        "suggested_minimum": 20,
+        "type": [
+            "integer",
+            "string"
+        ]
+    },
+    "train_tinyroberta-squad2_gbm_param-min_samples_leaf": {
+        "description": "The minimum number of samples required to be at a leaf node.",
+        "maximum": 500,
+        "minimum": 1,
+        "suggested_maximum": 80,
+        "suggested_minimum": 2,
+        "type": "integer"
+    },
+    "train_tinyroberta-squad2_gbm_param-min_samples_split": {
+        "description": "The minimum number of samples required to split an internal node.",
+        "maximum": 500,
+        "minimum": 2,
+        "suggested_maximum": 160,
+        "suggested_minimum": 10,
+        "type": "integer"
+    },
+    "train_tinyroberta-squad2_gbm_param-n_estimators": {
+        "description": "The number of boosting stages.",
+        "maximum": 2000,
+        "minimum": 1,
+        "suggested_maximum": 1200,
+        "suggested_minimum": 200,
+        "type": "integer"
+    },
+    "train_tinyroberta-squad2_gbm_param-subsample": {
+        "description": "The fraction of samples to be used for fitting the individual base learners.",
+        "maximum": 1,
+        "minimum": 0.01,
+        "suggested_maximum": 0.98,
+        "suggested_minimum": 0.05,
+        "type": "number"
+    }
+}

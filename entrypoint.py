@@ -31,7 +31,7 @@ def inference_mode(args):
     detector = Detector(args.metaparameters_filepath, args.learned_parameters_dirpath)
 
     logging.info("Calling the trojan detector")
-    detector.infer(args.model_filepath, args.result_filepath, args.scratch_dirpath, args.examples_dirpath, args.round_training_dataset_dirpath)
+    detector.infer(args.model_filepath, args.result_filepath, args.scratch_dirpath, args.examples_dirpath, args.round_training_dataset_dirpath, args.tokenizer_filepath)
 
 
 def configure_mode(args):
@@ -74,12 +74,24 @@ if __name__ == "__main__":
         required=True
     )
     inf_parser.add_argument(
+        "--tokenizer_filepath",
+        type=str,
+        help="File path to the pytorch tokenizer to be used with this model.",
+        required=True
+    )
+    inf_parser.add_argument(
         "--result_filepath",
         type=str,
         help="File path to the file where output result should be written. After "
         "execution this file should contain a single line with a single floating "
         "point trojan probability.",
         required=True
+    )
+    inf_parser.add_argument(
+        "--source_dataset_dirpath",
+        type=str,
+        help="File path to the directory containing a json file of the source squad dataset. The folder will contain a squad_v2.json file which can be loaded exactly like the example data.",
+        required=False
     )
     inf_parser.add_argument(
         "--scratch_dirpath",
@@ -145,6 +157,13 @@ if __name__ == "__main__":
         type=str,
         help="Path to a directory containing models to use when in configure mode.",
         required=True,
+    )
+
+    configure_parser.add_argument(
+        "--tokenizers_dirpath",
+        type=str,
+        help="Path to the directory containing the pytorch tokenizers to be used when in configure mode.",
+        required=True
     )
 
     configure_parser.add_argument(

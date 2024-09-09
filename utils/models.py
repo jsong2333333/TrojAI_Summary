@@ -4,13 +4,15 @@
 
 # You are solely responsible for determining the appropriateness of using and distributing the software and you assume all risks associated with its use, including but not limited to the risks and costs of program errors, compliance with applicable laws, damage to or loss of data, programs or equipment, and the unavailability or interruption of operation. This software is not intended to be used in any situation where a failure could cause risk of injury or damage to property. The software developed by NIST employees is not subject to copyright protection within the United States.
 
-
+import math
 import re
 from collections import OrderedDict
 from os.path import join
 
 import torch
 from tqdm import tqdm
+
+import torch
 
 
 def create_layer_map(model_repr_dict):
@@ -46,6 +48,7 @@ def load_model(model_filepath: str) -> (dict, str):
     Returns:
         model, dict, str - Torch model + dictionary representation of the model + model class name
     """
+
     model = torch.load(model_filepath)
     model_class = model.__class__.__name__
     model_repr = OrderedDict(

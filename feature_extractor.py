@@ -1,44 +1,35 @@
 import numpy as np
+import torch
+from collections import OrderedDict
 
 ORIGINAL_LEARNED_PARAM_DIR = './learned_parameters'
-MODEL_ARCH = ['SimplifiedRLStarter', 'BasicFCModel']
+LAYERS_TO_MODEL_ARCH = {53: 'tinyroberta-squad2',
+                        101: 'roberta-base-squad2',
+                        558: 'mobilebert-uncased-squad-v2'}
+MODEL_ARCH = ['tinyroberta-squad2', 'roberta-base-squad2', 'mobilebert-uncased-squad-v2']
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def _get_weight_features(model_repr, axis=None):
+def _get_weight_features(model_repr, dim=(), normalize=False):
     weight_features = []
-    for param in model_repr.values():
-        pshape = len(param.shape)
-        axis = tuple(range(-1, -1*(pshape), -1))
-        weight_features += np.max(param, axis= axis).tolist()
-        weight_features += np.mean(param, axis= axis).tolist()
-        sub = np.mean(param, axis= axis) - np.median(param, axis= axis)
-        weight_features += sub.tolist()
-        weight_features += np.median(param, axis= axis).tolist()
-        weight_features += np.sum(np.abs(param), axis= axis).tolist()
+    for backbone_params in model_repr.values():
+        if normalize:
+            norm = torch.linalg.norm(backbone_params.reshape(backbone_params.shape[0], -1), ord=2)
+            backbone_params  = backbone_params/norm
+        weight_features += torch.amax(backbone_params, dim=dim).flatten().detach().cpu().tolist()
+        weight_features += torch.mean(backbone_params, dim=dim).flatten().detach().cpu().tolist()
+        end_dim = -1*(len(backbone_params.shape) - len(dim)) #- 1
+        sub = torch.mean(backbone_params, dim=dim) - torch.median(torch.flatten(backbone_params, start_dim=0, end_dim=end_dim), dim=end_dim)[0]
+        weight_features += sub.flatten().detach().cpu().tolist()
+        weight_features += torch.median(torch.flatten(backbone_params, start_dim=0, end_dim=end_dim), dim=end_dim)[0].flatten().detach().cpu().tolist()
+        weight_features += torch.sum(backbone_params, dim=dim).flatten().detach().cpu().tolist()
     return weight_features
 
 
-def _get_eigen_features(model_repr):
-    min_shape, params = 1, []
-    for param in model_repr.values():
-        if len(param.shape) > min_shape:
-            reshaped_param = param.reshape(param.shape[0], -1)
-            _, singular_values, _ = np.linalg.svd(reshaped_param, False)
-            ssv = np.square(singular_values).flatten()
-            params.append(ssv.max().item())
-            params.append(ssv.mean().item())
-            params.append((ssv.mean() - np.median(ssv)).item())
-            params.append(np.median(ssv).item())
-            params.append(ssv.sum().item())
-            # params.extend(ssv.flatten().tolist())
-    return params
-
-
-def get_model_features(model, model_class, model_repr, infer=True):    
+def get_model_features(model_repr, infer=True): 
     features = []
 
-    features.extend(_get_weight_features(model_repr))
-    features.extend(_get_eigen_features(model_repr))
+    features.extend(_get_weight_features(model_repr, dim=(0,), normalize=True))
 
     if infer:
         return np.asarray([features])
