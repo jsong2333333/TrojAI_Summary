@@ -1,2 +1,4 @@
-# TrojAI_Summary
-This is the summary repository that includes round10 to round20 of the NIST-TrojAI competition. This competition mainly focus on trojan detection of the machine learning models trained in various datasets and tasks. The overall codebase templates are from the official NIST github repository, and the solutions range from model weight analysis to trigger inversion.
+# round-10
+This repo is for TrojAI round 10.
+- COCO category label file under /cat_label/coco-labels-paper.txt is obtained from the git repository: https://github.com/amikelive/coco-labels.
+- conda env create -f environment.yml
