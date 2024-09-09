@@ -1,0 +1,9 @@
+{
+    "train_clf_gbm_param-learning_rate": 0.032,
+    "train_clf_gbm_param-max_depth": 8,
+    "train_clf_gbm_param-max_features": 350,
+    "train_clf_gbm_param-min_samples_leaf": 8,
+    "train_clf_gbm_param-min_samples_split": 56,
+    "train_clf_gbm_param-n_estimators": 250,
+    "train_clf_gbm_param-subsample": 0.8
+}

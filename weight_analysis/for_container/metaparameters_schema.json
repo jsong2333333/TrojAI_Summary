@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Trojan Detection Container (ICSI) - The detector using weight and eigen values",
+  "technique": "Gradient Boosting Classifier",
+  "technique_description": "Using the trigger reconstruction logic, evaluating the model's output results with chosen evaluation metrics",
+  "technique_changes": "Exclude weight analysis, condense the triggers being estimated",
+  "technique_type": ["Trigger Inversion"],
+  "commit_id": "",
+  "repo_name": "https://github.com/jsong2333333/round-13",
+  "required": [],
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "train_clf_gbm_param-learning_rate": {
+        "description": "How fast the classifier is learning.",
+        "maximum": 1,
+        "minimum": 1e-05,
+        "suggested_maximum": 0.05,
+        "suggested_minimum": 5e-05,
+        "type": "number"
+    },
+    "train_clf_gbm_param-max_depth": {
+        "description": "The maximum depth of the individual regression estimators.",
+        "maximum": 10,
+        "minimum": 1,
+        "suggested_maximum": 5,
+        "suggested_minimum": 1,
+        "type": "integer"
+    },
+    "train_clf_gbm_param-max_features": {
+        "description": "The number of features to consider when looking for the best split.",
+        "maximum": 4000,
+        "minimum": 10,
+        "suggested_maximum": 1500,
+        "suggested_minimum": 50,
+        "type": "integer"
+    },
+    "train_clf_gbm_param-min_samples_leaf": {
+        "description": "The minimum number of samples required to be at a leaf node.",
+        "maximum": 500,
+        "minimum": 1,
+        "suggested_maximum": 80,
+        "suggested_minimum": 2,
+        "type": "integer"
+    },
+    "train_clf_gbm_param-min_samples_split": {
+        "description": "The minimum number of samples required to split an internal node.",
+        "maximum": 500,
+        "minimum": 2,
+        "suggested_maximum": 160,
+        "suggested_minimum": 10,
+        "type": "integer"
+    },
+    "train_clf_gbm_param-n_estimators": {
+        "description": "The number of boosting stages.",
+        "maximum": 7000,
+        "minimum": 1,
+        "suggested_maximum": 5000,
+        "suggested_minimum": 200,
+        "type": "integer"
+    },
+    "train_clf_gbm_param-subsample": {
+        "description": "How mush the model is learning.",
+        "maximum": 1,
+        "minimum": 0.4,
+        "suggested_maximum": 1,
+        "suggested_minimum": 0.6,
+        "type": "number"
+    }
+}
+}

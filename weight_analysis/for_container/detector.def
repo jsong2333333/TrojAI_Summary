@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: python:3.10
+
+%files
+    ./detector_ip.py /
+    ./entrypoint_ip.py /
+    ./utils /
+    ./metaparameters.json /
+    ./metaparameters_schema.json /
+    ./learned_parameters /
+    ./feature_extractor_ip.py /
+
+%post
+    pip install --upgrade pip
+    pip3 install --upgrade pip
+    pip3 install torch torchvision
+    pip install timm==0.6.12 transformers==4.23.1 jsonschema jsonargparse jsonpickle scikit-learn scikit-image pandas
+
+%runscript
+    exec python3 /entrypoint_ip.py "$@"
