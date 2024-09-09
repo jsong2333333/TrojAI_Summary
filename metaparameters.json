@@ -1,8 +1,9 @@
-{    
-    "train_gbm_param_learning_rate": 0.01,
-    "train_gbm_param_n_estimators": 825,
-    "train_gbm_param_max_depth": 4,
-    "train_gbm_param_min_samples_split": 35,
-    "train_gbm_param_min_samples_leaf": 2,
-    "train_gbm_param_max_features": 500
+{
+    "optimizer_class": "SGD",
+    "loss_class": "CrossEntropyLoss",
+    "learning_rate": 0.005,
+    "batch_size": 16,
+    "epochs": 100,
+    "ckpt_every": 0,
+    "ckpt_dir": "./ckpts"
 }

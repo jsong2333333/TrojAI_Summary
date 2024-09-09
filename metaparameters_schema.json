@@ -1,64 +1,59 @@
 {
-	"$schema": "http://json-schema.org/draft-07/schema#",
-	"title": "Trojan Detection Container from ICSI",
-	"technique": "Gradient Boosting Classifier",
-	"technique_description": "Extracts LLM model weights from first attention layer",
-	"technique_changes": "weight stat extraction based on layer, for baseline submission",
-	"technique_type": ["Weight Analysis"],
-	"commit_id": "82da3aa558a9576aaf941b8d59ea2e3e070b2b12",
-	"repo_name": "https://github.com/jsong2333333/round-19",
-	"required": [],
-	"additionalProperties": false,
-	"type": "object",
-	"properties": {
-	  "train_gbm_param_learning_rate": {
-		  "description": "How fast the classifier is learning.",
-		  "type": "number",
-		  "minimum": 0.001,
-		  "maximum": 1,
-		  "suggested_minimum": 0.005,
-		  "suggested_maximum": 0.05
-		},
-	  "train_gbm_param_n_estimators": {
-		  "description": "The number of boosting stages.",
-		  "type": "integer",
-		  "minimum": 1,
-		  "maximum": 2000,
-		  "suggested_minimum": 200,
-		  "suggested_maximum": 1200
-		},
-	  "train_gbm_param_max_depth": {
-		  "description": "The maximum depth of the individual regression estimators.",
-		  "type": "integer",
-		  "minimum": 1,
-		  "maximum": 10,
-		  "suggested_minimum": 1,
-		  "suggested_maximum": 5
-		},
-	  "train_gbm_param_min_samples_split": {
-		  "description": "The minimum number of samples required to split an internal node.",
-		  "type": "integer",
-		  "minimum": 2,
-		  "maximum": 500,
-		  "suggested_minimum": 10,
-		  "suggested_maximum": 160
-		},
-	  "train_gbm_param_min_samples_leaf": {
-		  "description": "The minimum number of samples required to be at a leaf node.",
-		  "type": "integer",
-		  "minimum": 1,
-		  "maximum": 500,
-		  "suggested_minimum": 2,
-		  "suggested_maximum": 80
-		},
-	  "train_gbm_param_max_features": {
-		  "description": "The number of features to consider when looking for the best split.",
-		  "type": "integer",
-		  "minimum": 1,
-		  "maximum": 900,
-		  "suggested_minimum": 20,
-		  "suggested_maximum": 700
-		}
-	}
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Trojan Mitigation Container (ICSI2) - Mitigation with robust training.",
+    "technique": "Fine Tuning",
+    "technique_description": "Run a certain amount of epochs of fine tuning on the model",
+    "technique_changes": "Added robust training",
+    "technique_type": ["Weight Modification"],
+    "commit_id": "c7dc47a558ec94e6f3474fad9dbfdd499fcc2347",
+    "repo_name": "https://github.com/jsong2333333/round-20",
+    "required": [],
+    "additionalProperties": false,
+    "type": "object",
+    "properties": {
+      "optimizer_class":  {
+          "description": "The torch optimizer used for fine tuning (contained in the torch.optim module)",
+          "type": "string"
+      },
+      "loss_class": {
+          "description": "The torch loss used for fine tuning (contained in the torch.nn module)",
+          "type": "string"
+      },
+      "learning_rate": {
+          "description": "Learing rate used for fine tuning ",
+          "type": "number",
+          "minimum": 0.000001,
+          "maximum": 0.5,
+          "suggested_minimum": 0.0001,
+          "suggested_maximum": 0.02
+      },
+      "epochs": {
+          "description": "Count of epochs to run fine tuning for",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "suggested_minimum": 3,
+          "suggested_maximum": 10
+      },
+      "ckpt_every": {
+          "description": "Every n amount of epochs, we create a checkpoint",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1,
+          "suggested_minimum": 0,
+          "suggested_maximum": 1
+      },
+      "ckpt_dir": {
+          "description": "Directory where checkpoints are dropped to",
+          "type": "string"
+      },
+      "batch_size": {
+          "description": "Batch size for training",
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 128,
+          "suggested_minimum": 16,
+          "suggested_maximum": 128
+      }
+    }
   }
-  
