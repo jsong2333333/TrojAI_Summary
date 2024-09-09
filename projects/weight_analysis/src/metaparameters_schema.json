@@ -1,0 +1,62 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Trojan Detection Container (ICSI)",    
+    "technique": "Weight Analysis with Gradient Boosting Classifier",
+    "technique_description": "Extracts the matrix-multiplied-weights for each model, select 39 features out of the 270 features; Trains the features on an RNN model.",
+    "technique_changes": "Changing feature selection and the classifier",
+    "commit_id": "",
+    "repo_name": "https://github.com/jsong2333333/round-12",
+    "required": [],
+    "additionalProperties": false,
+    "type": "object",
+    "properties": {
+        "train_gbm_param_learning_rate": {
+            "description": "How fast the classifier is learning.",
+            "type": "number",
+            "minimum": 0.001,
+            "maximum": 1,
+            "suggested_minimum": 0.005,
+            "suggested_maximum": 0.05
+        },
+        "train_gbm_param_n_estimators": {
+            "description": "The number of boosting stages.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2000,
+            "suggested_minimum": 200,
+            "suggested_maximum": 1200
+        },
+        "train_gbm_param_max_depth": {
+            "description": "The maximum depth of the individual regression estimators.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "suggested_minimum": 1,
+            "suggested_maximum": 5
+        },
+        "train_gbm_param_min_samples_split": {
+            "description": "The minimum number of samples required to split an internal node.",
+            "type": "integer",
+            "minimum": 2,
+            "maximum": 500,
+            "suggested_minimum": 10,
+            "suggested_maximum": 160
+        },
+        "train_gbm_param_min_samples_leaf": {
+            "description": "The minimum number of samples required to be at a leaf node.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "suggested_minimum": 2,
+            "suggested_maximum": 80
+        },
+        "train_gbm_param_max_features": {
+            "description": "The number of features to consider when looking for the best split.",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 900,
+            "suggested_minimum": 20,
+            "suggested_maximum": 700
+        }
+    }
+  }

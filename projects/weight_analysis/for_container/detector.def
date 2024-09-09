@@ -2,12 +2,15 @@ Bootstrap: docker
 From: python:3.9
 
 %files
-    ./classifier.py /
+    ./detector.py /
     ./feature_extractor.py /
     ./metaparameters.json /
     ./metaparameters_schema.json /
     ./learned_parameters /
-    ./environment.yml /
+    ./archs.py /
+    ./entrypoint.py /
+    ./utils /
+    ./models.py /
 
 
 %post
@@ -15,10 +18,11 @@ From: python:3.9
     apt-get install -y ffmpeg libsm6 libxext6
 
     pip install --upgrade pip
-    pip install torch==1.12.0+cu113 torchvision==0.13.0+cu113 --extra-index-url https://download.pytorch.org/whl/cu113  
-    pip install timm==0.6.7 opencv-python transformers jsonschema jsonargparse
+    pip3 install --upgrade pip
+    pip3 install torch --extra-index-url https://download.pytorch.org/whl/cu116
+    pip install tqdm jsonschema jsonargparse
     pip install scikit-learn==1.1.1
 
 
 %runscript
-    exec python3 /classifier.py "$@"
+    exec python3 /entrypoint.py "$@"

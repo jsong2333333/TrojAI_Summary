@@ -1,0 +1,8 @@
+{
+    "train_gbm_param_learning_rate": 0.02,
+	"train_gbm_param_n_estimators": 875,
+	"train_gbm_param_max_depth": 4,
+	"train_gbm_param_min_samples_split": 35,
+	"train_gbm_param_min_samples_leaf": 2,
+	"train_gbm_param_max_features": 15
+}
