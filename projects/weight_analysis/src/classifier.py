@@ -9,26 +9,35 @@ import os
 from sklearn.ensemble import GradientBoostingClassifier
 
 
+WEIGHT_LENGTH_TO_MODEL_ARCH = {978: 'resnet50', 924: 'vit_base_patch32_224', 960:'mobilenet_v2'}
+MODEL_ARCH = ['resnet50', 'vit_base_patch32_224', 'mobilenet_v2']
+MODEL_ARCH_TO_LENGTH = {'resnet50': 1248, 'vit_base_patch32_224': 1184, 'mobilenet_v2': 1225}
+MODEL_ARCH_TO_CLASSIFIER = {MODEL_ARCH[0]: GradientBoostingClassifier(learning_rate=0.007, n_estimators=1100, max_depth=3, min_samples_split=20, min_samples_leaf=14, max_features=130),
+                            MODEL_ARCH[1]: GradientBoostingClassifier(learning_rate=0.0135, n_estimators=500, max_depth=4, min_samples_split=46, min_samples_leaf=6, max_features=32),
+                            MODEL_ARCH[2]: GradientBoostingClassifier(learning_rate=0.015, n_estimators=300, max_depth=3, min_samples_split=38, min_samples_leaf=16, max_features=72)}
+
+
 def weight_analysis_detector(model_filepath,
                             result_filepath,
                             round_training_dataset_dirpath,
-                            parameters_dirpath,
-                            temp_var):
+                            parameters_dirpath):
+                            # , lambd):
 
     logging.info('model_filepath = {}'.format(model_filepath))
     logging.info('result_filepath = {}'.format(result_filepath))
     logging.info('Using round_training_dataset_dirpath = {}'.format(round_training_dataset_dirpath))
     logging.info('Using parameters_dirpath = {}'.format(parameters_dirpath))
-    logging.info('Setting temperature variable (parameter1) = {}'.format(temp_var))
+    # logging.info('Setting temperature variable (parameter1) = {}'.format(lambd))
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info("Using compute device: {}".format(device))
 
     # extract class and features from predict model
-    predict_model_class = fe.get_predict_model_class(model_filepath)
-    predict_model_features = np.asarray([fe.get_model_features(model_filepath, predict_model_class)])
-
-    # extract features for models in round10-training-dataset, should be shape (72, 663) for model A (Faster RCNN) (72, 487) for model B (SSD)
+    predict_model_class, predict_model_features = fe.get_predict_model_features_and_class(model_filepath)
+    predict_model_features = np.asarray([predict_model_features])
+    clf = MODEL_ARCH_TO_CLASSIFIER[predict_model_class]
+    
+    # extract features for models in image-classification-sep2022
     X_filepath = os.path.join(parameters_dirpath, f'train_X_{predict_model_class}.npy')
     y_filepath = os.path.join(parameters_dirpath, f'train_y_{predict_model_class}.npy')
     if os.path.exists(X_filepath) and os.path.exists(y_filepath):
@@ -52,20 +61,11 @@ def weight_analysis_detector(model_filepath,
     else:
         logging.info('No new learned parameters added, using only training dataset')
 
-    # fit the features to classifiers
-    classifiers = {'clf_A': GradientBoostingClassifier(n_estimators=1100, learning_rate=0.00225, max_depth=8, min_samples_split=17, subsample=.66, min_samples_leaf=4, max_features=230), 
-                    'clf_B': GradientBoostingClassifier(n_estimators=900, learning_rate=0.003, max_depth=4, min_samples_split=11, subsample=.63, max_features=240)}
-
-    clf = classifiers[f'clf_{predict_model_class}']
+    # fit the features to classifiers     
     clf.fit(X, y)
-
-    if predict_model_class == 'A':
+    try:
         trojan_probability = clf.predict_proba(predict_model_features)
-    elif predict_model_class == 'B':
-        log_probs = clf.predict_log_proba(predict_model_features)
-        T = temp_var
-        trojan_probability = np.exp(log_probs/T)/np.exp(log_probs/T).sum(axis=1).reshape([-1, 1])
-    else:
+    except:
         logging.warning('Not able to detect such model class')
         with open(result_filepath, 'w') as fh:
             fh.write("{}".format(0.50))
@@ -82,8 +82,7 @@ def configure(output_parameters_dirpath,
 
     logging.info('Configuring detector parameters with models from ' + configure_models_dirpath)
     try:
-        A = fe.get_features_and_labels_by_model_class(configure_models_dirpath, 'A')
-        B = fe.get_features_and_labels_by_model_class(configure_models_dirpath, 'B')
+        MODEL_DICTS = {arch:fe.get_features_and_labels_by_model_class(configure_models_dirpath, arch) for arch in MODEL_ARCH}
     except:
         logging.info('There is problem extracting features from configure_models_dirpath')
         logging.info('Exit configuration mode')
@@ -92,16 +91,13 @@ def configure(output_parameters_dirpath,
     os.makedirs(output_parameters_dirpath, exist_ok=True)
     logging.info('Writing configured parameter data to ' + output_parameters_dirpath)
 
-    if A['X'].shape[0] != 0 and A['X'].shape[0] == A['y'].shape[0] and A['X'].shape[1] == 663:
-        np.save(os.path.join(output_parameters_dirpath, 'X_A.npy'), A['X'])
-        np.save(os.path.join(output_parameters_dirpath, 'y_A.npy'), A['y'])
-    else:
-        logging.info('There is problem in saving parameters for model A (fasterrcnn)')
-    if B['X'].shape[0] != 0 and B['X'].shape[0] == B['y'].shape[0] and B['X'].shape[1] == 487:
-        np.save(os.path.join(output_parameters_dirpath, 'X_B.npy'), B['X'])
-        np.save(os.path.join(output_parameters_dirpath, 'y_B.npy'), B['y'])
-    else:
-        logging.info('There is problem in saving parameters for model B (ssd)')
+    for k, v in MODEL_DICTS.items():
+        X, y = v['X'], v['y']
+        if X.shape[0] != 0 and X.shape[0] == y.shape[0] and X.shape[1] == MODEL_ARCH_TO_LENGTH[k]:
+            np.save(os.path.join(output_parameters_dirpath, f'X_{k}.npy'), X)
+            np.save(os.path.join(output_parameters_dirpath, f'y_{k}.npy'), y)
+        else:
+            logging.info('There is problem in saving parameters for model architecture {}.'.format(k))
 
 
 if __name__ == '__main__':
@@ -122,14 +118,13 @@ if __name__ == '__main__':
     parser.add_argument('--configure_models_dirpath', type=str, help='Path to a directory containing models to use when in configure mode.')
 
     # these parameters need to be defined here, but their values will be loaded from the json file instead of the command line
-    parser.add_argument('--parameter1', type=float, help='Tunable temperature variable for SSD model prediction only.')
+    # parser.add_argument('--parameter1', type=float, help='Tunable temperature variable for SSD model prediction only.')
 
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s")
     logging.info("classifier.py launched")
-    logging.info(args)
 
 
     # Validate config file against schema
@@ -145,16 +140,14 @@ if __name__ == '__main__':
             # this throws a fairly descriptive error if validation fails
             jsonschema.validate(instance=config_json, schema=schema_json)
 
-    default_temp = 0.9
-    if config_json is not None and config_json["parameter1"] is not None:
-        default_temp = config_json["parameter1"]
-        logging.info('Setting temperature variable (parameter1) from metaparemeter.json')
-    elif args.parameter1 is not None:
-        default_temp = args.parameter1
-        
-    if default_temp < 0.1 or default_temp > 1.5:
-        logging.info('Tunable temperature variable (parameter1) given out of scope, resetting to 0.9')
-        default_temp = 0.9
+
+    # default_lambd = 0.01
+    # if config_json is not None and config_json["parameter1"] is not None:
+    #     default_lambd = config_json["parameter1"]
+    #     logging.info('Setting lambd variable (parameter1) from metaparemeter.json')
+    # elif args.parameter1 is not None:
+    #     default_lambd = args.parameter1
+
 
     if not args.configure_mode:
         if (args.model_filepath is not None and
@@ -168,8 +161,8 @@ if __name__ == '__main__':
             weight_analysis_detector(args.model_filepath,
                                     args.result_filepath,
                                     args.round_training_dataset_dirpath,
-                                    args.learned_parameters_dirpath,
-                                    default_temp)
+                                    args.learned_parameters_dirpath)
+                                    # , default_lambd)
         else:
             logging.info("Required Evaluation-Mode parameters missing!")
     else:
